@@ -1,0 +1,8 @@
+C:\Users\Samia\Dropbox\Demineur\DemClient\DemClient\bin\Debug\DemClient.exe
+C:\Users\Samia\Dropbox\Demineur\DemClient\DemClient\bin\Debug\DemClient.pdb
+C:\Users\Samia\Dropbox\Demineur\DemClient\DemClient\obj\x86\Debug\DemClient.Form1.resources
+C:\Users\Samia\Dropbox\Demineur\DemClient\DemClient\obj\x86\Debug\DemClient.Properties.Resources.resources
+C:\Users\Samia\Dropbox\Demineur\DemClient\DemClient\obj\x86\Debug\DemClient.csproj.GenerateResource.Cache
+C:\Users\Samia\Dropbox\Demineur\DemClient\DemClient\obj\x86\Debug\DemClient.exe
+C:\Users\Samia\Dropbox\Demineur\DemClient\DemClient\obj\x86\Debug\DemClient.pdb
+C:\Users\Samia\Dropbox\Demineur\DemClient\DemClient\obj\x86\Debug\DemClient.csprojResolveAssemblyReference.cache
