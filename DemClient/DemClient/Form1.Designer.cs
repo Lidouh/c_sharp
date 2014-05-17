@@ -31,7 +31,7 @@
             this.grillePanel = new System.Windows.Forms.Panel();
             this.joueur2Panel = new System.Windows.Forms.Panel();
             this.J2label = new System.Windows.Forms.Label();
-            this.nbMinesJ2textBox = new System.Windows.Forms.TextBox();
+            this.nbMinesJ2TextBox = new System.Windows.Forms.TextBox();
             this.joueur1Panel = new System.Windows.Forms.Panel();
             this.J1label = new System.Windows.Forms.Label();
             this.nbMinesJ1TextBox = new System.Windows.Forms.TextBox();
@@ -41,9 +41,12 @@
             this.aideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aProposToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.txt_nbMinesRestantes = new System.Windows.Forms.TextBox();
+            this.statusStrip = new System.Windows.Forms.StatusStrip();
+            this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.joueur2Panel.SuspendLayout();
             this.joueur1Panel.SuspendLayout();
             this.menuStrip1.SuspendLayout();
+            this.statusStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // grillePanel
@@ -57,7 +60,7 @@
             // 
             this.joueur2Panel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.joueur2Panel.Controls.Add(this.J2label);
-            this.joueur2Panel.Controls.Add(this.nbMinesJ2textBox);
+            this.joueur2Panel.Controls.Add(this.nbMinesJ2TextBox);
             this.joueur2Panel.Location = new System.Drawing.Point(12, 29);
             this.joueur2Panel.Name = "joueur2Panel";
             this.joueur2Panel.Size = new System.Drawing.Size(160, 120);
@@ -74,17 +77,17 @@
             this.J2label.TabIndex = 5;
             this.J2label.Text = "Joueur 2";
             // 
-            // nbMinesJ2textBox
+            // nbMinesJ2TextBox
             // 
-            this.nbMinesJ2textBox.BackColor = System.Drawing.Color.Red;
-            this.nbMinesJ2textBox.Font = new System.Drawing.Font("Arial Black", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.nbMinesJ2textBox.ForeColor = System.Drawing.Color.WhiteSmoke;
-            this.nbMinesJ2textBox.Location = new System.Drawing.Point(55, 53);
-            this.nbMinesJ2textBox.Name = "nbMinesJ2textBox";
-            this.nbMinesJ2textBox.Size = new System.Drawing.Size(39, 37);
-            this.nbMinesJ2textBox.TabIndex = 4;
-            this.nbMinesJ2textBox.Text = "0";
-            this.nbMinesJ2textBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.nbMinesJ2TextBox.BackColor = System.Drawing.Color.Red;
+            this.nbMinesJ2TextBox.Font = new System.Drawing.Font("Arial Black", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.nbMinesJ2TextBox.ForeColor = System.Drawing.Color.WhiteSmoke;
+            this.nbMinesJ2TextBox.Location = new System.Drawing.Point(55, 53);
+            this.nbMinesJ2TextBox.Name = "nbMinesJ2TextBox";
+            this.nbMinesJ2TextBox.Size = new System.Drawing.Size(39, 37);
+            this.nbMinesJ2TextBox.TabIndex = 4;
+            this.nbMinesJ2TextBox.Text = "0";
+            this.nbMinesJ2TextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // joueur1Panel
             // 
@@ -141,7 +144,7 @@
             // abandonToolStripMenuItem
             // 
             this.abandonToolStripMenuItem.Name = "abandonToolStripMenuItem";
-            this.abandonToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.abandonToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
             this.abandonToolStripMenuItem.Text = "Abandon";
             this.abandonToolStripMenuItem.Click += new System.EventHandler(this.nouveauToolStripMenuItem_Click);
             // 
@@ -172,11 +175,28 @@
             this.txt_nbMinesRestantes.Text = "40";
             this.txt_nbMinesRestantes.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
+            // statusStrip
+            // 
+            this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripStatusLabel});
+            this.statusStrip.Location = new System.Drawing.Point(0, 369);
+            this.statusStrip.Name = "statusStrip";
+            this.statusStrip.Size = new System.Drawing.Size(530, 22);
+            this.statusStrip.TabIndex = 5;
+            this.statusStrip.Text = "statusStrip";
+            // 
+            // toolStripStatusLabel
+            // 
+            this.toolStripStatusLabel.Name = "toolStripStatusLabel";
+            this.toolStripStatusLabel.Size = new System.Drawing.Size(27, 17);
+            this.toolStripStatusLabel.Text = "Etat";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(530, 370);
+            this.ClientSize = new System.Drawing.Size(530, 391);
+            this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.txt_nbMinesRestantes);
             this.Controls.Add(this.joueur1Panel);
             this.Controls.Add(this.joueur2Panel);
@@ -192,6 +212,8 @@
             this.joueur1Panel.PerformLayout();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
+            this.statusStrip.ResumeLayout(false);
+            this.statusStrip.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -209,9 +231,11 @@
         private System.Windows.Forms.ToolStripMenuItem aideToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aProposToolStripMenuItem;
         private System.Windows.Forms.TextBox txt_nbMinesRestantes;
-        private System.Windows.Forms.TextBox nbMinesJ2textBox;
+        private System.Windows.Forms.TextBox nbMinesJ2TextBox;
         private System.Windows.Forms.Label J2label;
         private System.Windows.Forms.Label J1label;
+        private System.Windows.Forms.StatusStrip statusStrip;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel;
     }
 }
 

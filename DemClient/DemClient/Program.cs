@@ -5,6 +5,8 @@ using System.Windows.Forms;
 
 namespace DemClient
 {
+
+   
     static class Program
     {
         /// <summary>
@@ -16,6 +18,7 @@ namespace DemClient
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());
+
         }
     }
 }

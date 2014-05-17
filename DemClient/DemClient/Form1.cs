@@ -7,11 +7,21 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Collections; //pour la ArrayList
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
+using System.Runtime.Serialization.Formatters.Binary;
+
+using System.IO;
 
 namespace DemClient
 {
     public partial class Form1 : Form
     {
+        IPAddress serverAddress = IPAddress.Parse("127.0.0.1");
+        TcpClient client = new TcpClient();
+        NetworkStream stream;   
+
         /// Largeur des buttons servant à représenter les cases du damier
         const int LARGEUREMPLACEMENT = 20;
 
@@ -32,23 +42,38 @@ namespace DemClient
 
         /// Nombre de mines que le joueur a trouvé
         private int nombreDeMinesTrouvees = 0;
+        private int nombreDeMinesTrouveesParJ2 = 0;
 
         /// Etat de la partie (cf enumération 'etatPartie')
         private etatPartie etatCourant;
 
-        
+        public static bool GetBit(byte[] self, int index)
+        {
+            int byteIndex = index / 8;
+            int bitIndex = index % 8;
+            byte mask = (byte)(1 << bitIndex);
+
+            return (self[byteIndex] & mask) != 0;
+        }
+
 
         public Form1()
         {
-           
             InitializeComponent();
 
+            client.Connect(serverAddress, 8003);
+            stream = client.GetStream();
             //On lance la procédure qui initilialise un nouveau jeu
+
             initialise();
+
         }
+
+
 
         private void initialise() /// Initialise une nouvelle partie
         {
+            byte[] rcvBytes = new byte[32];
             //On positionne les différents paramètres
                     largeur = 16;
                     longueur = 16;
@@ -61,27 +86,124 @@ namespace DemClient
             listeDesEmplacements = new ArrayList(largeur * longueur);
 
             //On crée le damier
-            creerDamier();
+            stream.Read(rcvBytes, 0, rcvBytes.Length);
+            creerDamierDepuisServ(rcvBytes);
             nombreDeMinesTrouvees = 0;
+            nombreDeMinesTrouveesParJ2 = 0;
             afficheMinesTrouvees();
+     
+            //A qui est le tour
+            byte[] rcvBytesTour = new byte[1];
+            stream.Read(rcvBytesTour, 0, rcvBytesTour.Length);
 
-            //La partie va commencer des que le joueur va cliquer sur une case...
-            etatCourant = etatPartie.EnAttente;
+            if (rcvBytesTour[0] == 255)
+            {
+                etatCourant = etatPartie.EnCours;
+                toolStripStatusLabel.Text = "A votre tour";
+                toolStripStatusLabel.ForeColor = Color.Green;
+                statusStrip.Refresh();
+            }
+            if (rcvBytesTour[0] == 0)
+            {
+                etatCourant = etatPartie.EnAttente;
+                toolStripStatusLabel.Text = "En attente";
+                toolStripStatusLabel.ForeColor = Color.Orange;
+                statusStrip.Refresh();
+                tour();
+            }
+            
+        }
+
+        public void tour()
+        {
+            
+            byte[] rcvBytesClick = new byte[1024];
+            byte[] rcvBytesTour = new byte[1];
+
+            stream.Read(rcvBytesClick, 0, rcvBytesClick.Length);
+            stream.Read(rcvBytesTour, 0, rcvBytesTour.Length);
+
+            if (rcvBytesTour[0] == 255)
+            {
+                if (nombreDeMinesTrouvees + nombreDeMinesTrouveesParJ2 == nombreDeMines)
+                {
+                    if (nombreDeMinesTrouvees > nombreDeMinesTrouveesParJ2) victoire();
+                    if (nombreDeMinesTrouvees < nombreDeMinesTrouveesParJ2) defaite();
+                    etatCourant = etatPartie.Fini;
+                    toolStripStatusLabel.Text = "Fini";
+                    toolStripStatusLabel.ForeColor = Color.Black;
+                    statusStrip.Refresh();
+                }
+                else
+                {
+                    int rcvClick = BitConverter.ToInt32(rcvBytesClick, 0);
+                    RechercheRecursive(rcvClick);
+                    etatCourant = etatPartie.EnCours;
+                    toolStripStatusLabel.Text = "A votre tour";
+                    toolStripStatusLabel.ForeColor = Color.Green;
+                    statusStrip.Refresh();
+                }
+                
+            }
+            if (rcvBytesTour[0] == 0)
+            {
+                int rcvClick = BitConverter.ToInt32(rcvBytesClick, 0);
+                Button btn = ((Button)listeDesEmplacements[rcvClick]);
+                if (nombreDeMinesTrouvees + nombreDeMinesTrouveesParJ2 < nombreDeMines
+                    && ((typeEmplacement)btn.Tag) == typeEmplacement.Mine && btn.Text != CHARACTERTROUVE)
+                {
+                    btn.Text = CHARACTERTROUVE;
+                    btn.ForeColor = Color.White;
+                    btn.BackColor = Color.Red;
+
+                    nombreDeMinesTrouveesParJ2++;
+                    afficheMinesTrouvees();
+                }
+                else if (((typeEmplacement)btn.Tag) != typeEmplacement.Mine)
+                {
+                    RechercheRecursive(rcvClick);
+                }
+                etatCourant = etatPartie.EnAttente;
+                toolStripStatusLabel.Text = "En attente";
+                toolStripStatusLabel.ForeColor = Color.Orange;
+                statusStrip.Refresh();
+                tour();
+            }
+            if (rcvBytesTour[0] == 25)
+            {
+                victoire();
+                etatCourant = etatPartie.Fini;
+                toolStripStatusLabel.Text = "Fini";
+                toolStripStatusLabel.ForeColor = Color.Black;
+                statusStrip.Refresh();
+            }
+
         }
 
         private void nouveauToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            initialise();
+            if(etatCourant != etatPartie.Fini){
+            defaite();
+            byte[] sndBytesClick = new byte[1024];
+            stream.Write(sndBytesClick, 0, sndBytesClick.Length);
+            byte[] sndBytesTour = new byte[] { 25 };
+            stream.Write(sndBytesTour, 0, sndBytesTour.Length);
+            stream.Flush();
+            etatCourant = etatPartie.Fini;
+            toolStripStatusLabel.Text = "Fini";
+            toolStripStatusLabel.ForeColor = Color.Black;
+            statusStrip.Refresh();
+            }
         }
 
         private void afficheMinesTrouvees()
         {
             nbMinesJ1TextBox.Text = Convert.ToString(nombreDeMinesTrouvees);
-            txt_nbMinesRestantes.Text = Convert.ToString(nombreDeMines - nombreDeMinesTrouvees);
+            nbMinesJ2TextBox.Text = Convert.ToString(nombreDeMinesTrouveesParJ2);
+            txt_nbMinesRestantes.Text = Convert.ToString(nombreDeMines - nombreDeMinesTrouvees - nombreDeMinesTrouveesParJ2);
         }
 
-        /// Procédure de création du damier
-        private void creerDamier()
+        private void creerDamierDepuisServ( byte [] tabMine)
         {
             Button btn;
             grillePanel.Controls.Clear();
@@ -111,55 +233,136 @@ namespace DemClient
                 }
             }
 
-            //On positionne correctement les différents éléments graphiques qui demandent à être repositionnés
-            grillePanel.Size = new Size(largeur * LARGEUREMPLACEMENT, longueur * LARGEUREMPLACEMENT);
-
-            //Enfin on pose les mines...
-            Random r = new Random();
-            int nbMinesPosees = 0;
-            int rand = 0;
-            while (nbMinesPosees < nombreDeMines)
+            int index = 0;
+            for (int i = 0; i < tabMine.Length; i++)
             {
-                rand = r.Next(0, largeur * longueur);
-                //listeDesEmplacements contient une liste d'objet de type Button, dont le tag est vide ou minée
-                if ((typeEmplacement)(((Button)listeDesEmplacements[rand]).Tag) == typeEmplacement.Vide)
+                for (int j = 0; j < 8; j++)
                 {
-                    ((Button)listeDesEmplacements[rand]).Tag = typeEmplacement.Mine;
-                    nbMinesPosees++;
+                    if (GetBit(tabMine,index)){
+                        ((Button)listeDesEmplacements[index]).Tag = typeEmplacement.Mine;
+                    }
+                    index++;
                 }
             }
         }
 
+        /// Procédure de création du damier
+        //private void creerDamier()
+        //{
+        //    Button btn;
+        //    grillePanel.Controls.Clear();
+
+        //    //Boucle dans laquelle on crée tous les boutons qui vont nous permettre de représenter les cases
+        //    for (int i = 0; i < largeur; i++)
+        //    {
+        //        for (int j = 0; j < longueur; j++)
+        //        {
+        //            btn = new Button();
+        //            btn.Text = "";
+        //            btn.Size = new Size(LARGEUREMPLACEMENT, LARGEUREMPLACEMENT);
+        //            btn.Location = new Point(i * LARGEUREMPLACEMENT, j * LARGEUREMPLACEMENT);
+
+        //            //Le tag va nous servir à stocker le type de case: Est-ce une mine ou pas ?
+        //            //Lors de la création on les mets toutes comme vide, on placera les mines après
+        //            btn.Tag = typeEmplacement.Vide;
+
+        //            btn.Font = new Font(FontFamily.GenericSansSerif, (float)8, FontStyle.Bold);
+
+        //            //Abonnement aux évènements
+        //            btn.Click += new EventHandler(btn_Click);
+
+        //            //On ajoute le bouton crée à la liste des emplacements
+        //            listeDesEmplacements.Add(btn);
+        //            grillePanel.Controls.Add(btn);
+        //        }
+        //    }
+
+        //    //On positionne correctement les différents éléments graphiques qui demandent à être repositionnés
+        //    grillePanel.Size = new Size(largeur * LARGEUREMPLACEMENT, longueur * LARGEUREMPLACEMENT);
+
+        //    //Enfin on pose les mines...
+        //    Random r = new Random();
+        //    int nbMinesPosees = 0;
+        //    int rand = 0;
+        //    while (nbMinesPosees < nombreDeMines)
+        //    {
+        //        rand = r.Next(0, largeur * longueur);
+        //        //listeDesEmplacements contient une liste d'objet de type Button, dont le tag est vide ou minée
+        //        if ((typeEmplacement)(((Button)listeDesEmplacements[rand]).Tag) == typeEmplacement.Vide)
+        //        {
+        //            ((Button)listeDesEmplacements[rand]).Tag = typeEmplacement.Mine;
+        //            nbMinesPosees++;
+        //        }
+        //    }
+        //}
+
         private void victoire()
         {
-            MessageBox.Show("Bravo, partie terminée.", "Fin");
+            MessageBox.Show("Bravo, Vous avez gagné.", "Fin");
+        }
+
+        private void defaite()
+        {
+            MessageBox.Show("Vous avez perdu.", "Fin");
         }
 
         void btn_Click(object sender, EventArgs e)
         {
-            if (etatCourant == etatPartie.EnAttente)
+            if (etatCourant == etatPartie.EnCours)
             {
-                etatCourant = etatPartie.EnCours;
-            }
-            Button btn = ((Button)sender);
-            if (nombreDeMinesTrouvees < nombreDeMines && ((typeEmplacement)btn.Tag) == typeEmplacement.Mine)
-            {
-                btn.Text = CHARACTERTROUVE;
-                btn.ForeColor = Color.White;
-                btn.BackColor = Color.Blue;
-
-                nombreDeMinesTrouvees++;
-                afficheMinesTrouvees();
-
-                if (nombreDeMinesTrouvees == nombreDeMines)
+                //   etatCourant = etatPartie.EnCours;
+                //}
+                Button btn = ((Button)sender);
+                if (nombreDeMinesTrouvees + nombreDeMinesTrouveesParJ2 < nombreDeMines
+                    && ((typeEmplacement)btn.Tag) == typeEmplacement.Mine && btn.Text != CHARACTERTROUVE)
                 {
-                    victoire();
+                    btn.Text = CHARACTERTROUVE;
+                    btn.ForeColor = Color.White;
+                    btn.BackColor = Color.Blue;
+
+                    nombreDeMinesTrouvees++;
+                    afficheMinesTrouvees();
+
+                    byte[] sndBytesMine = new byte[1024];
+                    sndBytesMine = BitConverter.GetBytes(listeDesEmplacements.IndexOf(btn));
+                    stream.Write(sndBytesMine, 0, sndBytesMine.Length);
+                    byte[] sndBytesAtt = new byte[] { 0 };
+                    stream.Write(sndBytesAtt, 0, sndBytesAtt.Length);
+                    stream.Flush();
+
+                    if (nombreDeMinesTrouvees + nombreDeMinesTrouveesParJ2 == nombreDeMines)
+                    {
+                        if (nombreDeMinesTrouvees > nombreDeMinesTrouveesParJ2) victoire();
+                        if (nombreDeMinesTrouvees < nombreDeMinesTrouveesParJ2) defaite();
+
+                        byte[] sndBytesClick = new byte[1024];
+                        sndBytesClick = BitConverter.GetBytes(listeDesEmplacements.IndexOf(btn));
+                        stream.Write(sndBytesClick, 0, sndBytesClick.Length);
+                        byte[] sndBytesTour = new byte[] { 255 };
+                        stream.Write(sndBytesTour, 0, sndBytesTour.Length);
+                        stream.Flush();
+                        etatCourant = etatPartie.Fini;
+                        toolStripStatusLabel.Text = "Fini";
+                        toolStripStatusLabel.ForeColor = Color.Black;
+                        statusStrip.Refresh();
+                    }
+
                 }
-                
-            }
-            else //Sinon il faut explorer les cases avoisinantes
-            {
-                RechercheRecursive(listeDesEmplacements.IndexOf(btn));
+                else if (((typeEmplacement)btn.Tag) != typeEmplacement.Mine) //Sinon il faut explorer les cases avoisinantes
+                {
+                    RechercheRecursive(listeDesEmplacements.IndexOf(btn));
+                    etatCourant = etatPartie.EnAttente;
+                    toolStripStatusLabel.Text = "En attente";
+                    toolStripStatusLabel.ForeColor = Color.Orange;
+                    statusStrip.Refresh();
+                    byte[] sndBytesClick = new byte[1024];
+                    sndBytesClick = BitConverter.GetBytes(listeDesEmplacements.IndexOf(btn));
+                    stream.Write(sndBytesClick, 0, sndBytesClick.Length);
+                    byte[] sndBytesTour = new byte[] { 255 };
+                    stream.Write(sndBytesTour, 0, sndBytesTour.Length);
+                    stream.Flush();
+                    tour();
+                }
             }
 
         }
@@ -383,5 +586,5 @@ namespace DemClient
     public enum typeEmplacement { Vide, Mine };
 
     /// Enumération des différents états possibles pour une partie
-    public enum etatPartie { EnCours, Perdue, EnAttente };
+    public enum etatPartie { EnCours, Fini, EnAttente };
 }

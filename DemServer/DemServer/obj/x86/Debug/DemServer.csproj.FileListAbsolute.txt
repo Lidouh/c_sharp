@@ -1,0 +1,14 @@
+C:\Users\Samia\AppData\Local\Temporary Projects\DemServer\bin\Debug\DemServer.exe
+C:\Users\Samia\AppData\Local\Temporary Projects\DemServer\bin\Debug\DemServer.pdb
+C:\Users\Samia\AppData\Local\Temporary Projects\DemServer\obj\x86\Debug\DemServer.exe
+C:\Users\Samia\AppData\Local\Temporary Projects\DemServer\obj\x86\Debug\DemServer.pdb
+C:\Users\Samia\Dropbox\Demineur\DemServer\DemServer\obj\x86\Debug\DemServer.exe
+C:\Users\Samia\Dropbox\Demineur\DemServer\DemServer\obj\x86\Debug\DemServer.pdb
+C:\Users\Samia\Dropbox\Demineur\DemServer\DemServer\bin\Debug\DemServer.exe
+C:\Users\Samia\Dropbox\Demineur\DemServer\DemServer\bin\Debug\DemServer.pdb
+C:\Users\Samia\Dropbox\Demineur\DemServer\DemServer\obj\x86\Debug\DemServer.csprojResolveAssemblyReference.cache
+F:\ISIB3\Compl Prog\DemServer\DemServer\obj\x86\Debug\DemServer.exe
+F:\ISIB3\Compl Prog\DemServer\DemServer\obj\x86\Debug\DemServer.pdb
+F:\ISIB3\Compl Prog\DemServer\DemServer\bin\Debug\DemServer.exe
+F:\ISIB3\Compl Prog\DemServer\DemServer\bin\Debug\DemServer.pdb
+F:\ISIB3\Compl Prog\DemServer\DemServer\obj\x86\Debug\DemServer.csprojResolveAssemblyReference.cache

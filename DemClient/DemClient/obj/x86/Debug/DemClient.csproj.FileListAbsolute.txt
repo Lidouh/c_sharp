@@ -6,3 +6,11 @@ C:\Users\Samia\Dropbox\Demineur\DemClient\DemClient\obj\x86\Debug\DemClient.cspr
 C:\Users\Samia\Dropbox\Demineur\DemClient\DemClient\obj\x86\Debug\DemClient.exe
 C:\Users\Samia\Dropbox\Demineur\DemClient\DemClient\obj\x86\Debug\DemClient.pdb
 C:\Users\Samia\Dropbox\Demineur\DemClient\DemClient\obj\x86\Debug\DemClient.csprojResolveAssemblyReference.cache
+F:\ISIB3\Compl Prog\DemClient\DemClient\obj\x86\Debug\DemClient.exe
+F:\ISIB3\Compl Prog\DemClient\DemClient\obj\x86\Debug\DemClient.pdb
+F:\ISIB3\Compl Prog\DemClient\DemClient\bin\Debug\DemClient.exe
+F:\ISIB3\Compl Prog\DemClient\DemClient\bin\Debug\DemClient.pdb
+F:\ISIB3\Compl Prog\DemClient\DemClient\obj\x86\Debug\DemClient.csprojResolveAssemblyReference.cache
+F:\ISIB3\Compl Prog\DemClient\DemClient\obj\x86\Debug\DemClient.Form1.resources
+F:\ISIB3\Compl Prog\DemClient\DemClient\obj\x86\Debug\DemClient.Properties.Resources.resources
+F:\ISIB3\Compl Prog\DemClient\DemClient\obj\x86\Debug\DemClient.csproj.GenerateResource.Cache
