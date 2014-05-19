@@ -20,7 +20,11 @@ namespace DemClient
     {
         IPAddress serverAddress = IPAddress.Parse("127.0.0.1");
         TcpClient client = new TcpClient();
-        NetworkStream stream;   
+        NetworkStream stream;
+        Thread t1;
+        bool attente = false;
+        delegate void btnClick(object sender);
+        private delegate void ChangeToolStripStatus(string str, Color color);
 
         /// Largeur des buttons servant à représenter les cases du damier
         const int LARGEUREMPLACEMENT = 20;
@@ -56,7 +60,6 @@ namespace DemClient
             return (self[byteIndex] & mask) != 0;
         }
 
-
         public Form1()
         {
             InitializeComponent();
@@ -64,12 +67,10 @@ namespace DemClient
             client.Connect(serverAddress, 8003);
             stream = client.GetStream();
             //On lance la procédure qui initilialise un nouveau jeu
-
+            t1 = new Thread(threadAttente);
             initialise();
-
+            t1.Start();
         }
-
-
 
         private void initialise() /// Initialise une nouvelle partie
         {
@@ -109,14 +110,46 @@ namespace DemClient
                 toolStripStatusLabel.Text = "En attente";
                 toolStripStatusLabel.ForeColor = Color.Orange;
                 statusStrip.Refresh();
-                tour();
+                attente = true;
             }
-            
         }
 
-        public void tour()
+        private void ChangeToolStripStatusLabel(string str, Color color)
         {
-            
+            toolStripStatusLabel.Text = str;
+            toolStripStatusLabel.ForeColor = color;
+            statusStrip.Refresh();
+        }
+
+        private void threadAttente() {
+            while (true)
+            {
+                while (attente)
+                {
+                    byte[] rcvBytesClick = new byte[1024];
+                    byte[] rcvBytesTour = new byte[1];
+
+                    stream.Read(rcvBytesClick, 0, rcvBytesClick.Length);
+                    stream.Read(rcvBytesTour, 0, rcvBytesTour.Length);
+
+                    if (rcvBytesTour[0] == 25) //l'autre a abandonné
+                    {
+                        victoire();
+                        etatCourant = etatPartie.Fini;
+                        this.Invoke(new ChangeToolStripStatus(ChangeToolStripStatusLabel), "Fini", Color.Black);
+                        attente = false;
+                    }
+                    else
+                    {
+                        int rcvClick = BitConverter.ToInt32(rcvBytesClick, 0);
+                        this.Invoke(new btnClick(btn_Click_J2), listeDesEmplacements[rcvClick]);
+                    }
+                }
+            }
+        }
+
+        private void tour()   //plus utilisé (commit: réseau : affichage tour à tour)
+        {
             byte[] rcvBytesClick = new byte[1024];
             byte[] rcvBytesTour = new byte[1];
 
@@ -143,7 +176,6 @@ namespace DemClient
                     toolStripStatusLabel.ForeColor = Color.Green;
                     statusStrip.Refresh();
                 }
-                
             }
             if (rcvBytesTour[0] == 0)
             {
@@ -177,9 +209,9 @@ namespace DemClient
                 toolStripStatusLabel.ForeColor = Color.Black;
                 statusStrip.Refresh();
             }
-
         }
 
+        /// ToolStrip d'abandon
         private void nouveauToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if(etatCourant != etatPartie.Fini){
@@ -247,74 +279,77 @@ namespace DemClient
         }
 
         /// Procédure de création du damier
-        //private void creerDamier()
-        //{
-        //    Button btn;
-        //    grillePanel.Controls.Clear();
+        private void creerDamier()   //plus utilisé (commit: un début)
+        {
+            Button btn;
+            grillePanel.Controls.Clear();
 
-        //    //Boucle dans laquelle on crée tous les boutons qui vont nous permettre de représenter les cases
-        //    for (int i = 0; i < largeur; i++)
-        //    {
-        //        for (int j = 0; j < longueur; j++)
-        //        {
-        //            btn = new Button();
-        //            btn.Text = "";
-        //            btn.Size = new Size(LARGEUREMPLACEMENT, LARGEUREMPLACEMENT);
-        //            btn.Location = new Point(i * LARGEUREMPLACEMENT, j * LARGEUREMPLACEMENT);
+            //Boucle dans laquelle on crée tous les boutons qui vont nous permettre de représenter les cases
+            for (int i = 0; i < largeur; i++)
+            {
+                for (int j = 0; j < longueur; j++)
+                {
+                    btn = new Button();
+                    btn.Text = "";
+                    btn.Size = new Size(LARGEUREMPLACEMENT, LARGEUREMPLACEMENT);
+                    btn.Location = new Point(i * LARGEUREMPLACEMENT, j * LARGEUREMPLACEMENT);
 
-        //            //Le tag va nous servir à stocker le type de case: Est-ce une mine ou pas ?
-        //            //Lors de la création on les mets toutes comme vide, on placera les mines après
-        //            btn.Tag = typeEmplacement.Vide;
+                    //Le tag va nous servir à stocker le type de case: Est-ce une mine ou pas ?
+                    //Lors de la création on les mets toutes comme vide, on placera les mines après
+                    btn.Tag = typeEmplacement.Vide;
 
-        //            btn.Font = new Font(FontFamily.GenericSansSerif, (float)8, FontStyle.Bold);
+                    btn.Font = new Font(FontFamily.GenericSansSerif, (float)8, FontStyle.Bold);
 
-        //            //Abonnement aux évènements
-        //            btn.Click += new EventHandler(btn_Click);
+                    //Abonnement aux évènements
+                    btn.Click += new EventHandler(btn_Click);
 
-        //            //On ajoute le bouton crée à la liste des emplacements
-        //            listeDesEmplacements.Add(btn);
-        //            grillePanel.Controls.Add(btn);
-        //        }
-        //    }
+                    //On ajoute le bouton crée à la liste des emplacements
+                    listeDesEmplacements.Add(btn);
+                    grillePanel.Controls.Add(btn);
+                }
+            }
 
-        //    //On positionne correctement les différents éléments graphiques qui demandent à être repositionnés
-        //    grillePanel.Size = new Size(largeur * LARGEUREMPLACEMENT, longueur * LARGEUREMPLACEMENT);
+            //On positionne correctement les différents éléments graphiques qui demandent à être repositionnés
+            grillePanel.Size = new Size(largeur * LARGEUREMPLACEMENT, longueur * LARGEUREMPLACEMENT);
 
-        //    //Enfin on pose les mines...
-        //    Random r = new Random();
-        //    int nbMinesPosees = 0;
-        //    int rand = 0;
-        //    while (nbMinesPosees < nombreDeMines)
-        //    {
-        //        rand = r.Next(0, largeur * longueur);
-        //        //listeDesEmplacements contient une liste d'objet de type Button, dont le tag est vide ou minée
-        //        if ((typeEmplacement)(((Button)listeDesEmplacements[rand]).Tag) == typeEmplacement.Vide)
-        //        {
-        //            ((Button)listeDesEmplacements[rand]).Tag = typeEmplacement.Mine;
-        //            nbMinesPosees++;
-        //        }
-        //    }
-        //}
+            //Enfin on pose les mines...
+            Random r = new Random();
+            int nbMinesPosees = 0;
+            int rand = 0;
+            while (nbMinesPosees < nombreDeMines)
+            {
+                rand = r.Next(0, largeur * longueur);
+                //listeDesEmplacements contient une liste d'objet de type Button, dont le tag est vide ou minée
+                if ((typeEmplacement)(((Button)listeDesEmplacements[rand]).Tag) == typeEmplacement.Vide)
+                {
+                    ((Button)listeDesEmplacements[rand]).Tag = typeEmplacement.Mine;
+                    nbMinesPosees++;
+                }
+            }
+        }
 
         private void victoire()
         {
-            MessageBox.Show("Bravo, Vous avez gagné.", "Fin");
+            MessageBox.Show("Bravo, Vous avez gagné :)", "Fin");
         }
 
         private void defaite()
         {
-            MessageBox.Show("Vous avez perdu.", "Fin");
+            MessageBox.Show("Vous avez perdu :(", "Fin");
         }
 
+        private void exaequo()
+        {
+            MessageBox.Show("Ex aequo :o", "Fin");
+        }
+        
         void btn_Click(object sender, EventArgs e)
         {
-            if (etatCourant == etatPartie.EnCours)
+            Button btn = ((Button)sender);
+            if (etatCourant == etatPartie.EnCours && btn.Text == "")
             {
-                //   etatCourant = etatPartie.EnCours;
-                //}
-                Button btn = ((Button)sender);
                 if (nombreDeMinesTrouvees + nombreDeMinesTrouveesParJ2 < nombreDeMines
-                    && ((typeEmplacement)btn.Tag) == typeEmplacement.Mine && btn.Text != CHARACTERTROUVE)
+                    && ((typeEmplacement)btn.Tag) == typeEmplacement.Mine)
                 {
                     btn.Text = CHARACTERTROUVE;
                     btn.ForeColor = Color.White;
@@ -334,6 +369,7 @@ namespace DemClient
                     {
                         if (nombreDeMinesTrouvees > nombreDeMinesTrouveesParJ2) victoire();
                         if (nombreDeMinesTrouvees < nombreDeMinesTrouveesParJ2) defaite();
+                        if (nombreDeMinesTrouvees == nombreDeMinesTrouveesParJ2) exaequo();
 
                         byte[] sndBytesClick = new byte[1024];
                         sndBytesClick = BitConverter.GetBytes(listeDesEmplacements.IndexOf(btn));
@@ -361,10 +397,47 @@ namespace DemClient
                     byte[] sndBytesTour = new byte[] { 255 };
                     stream.Write(sndBytesTour, 0, sndBytesTour.Length);
                     stream.Flush();
-                    tour();
+                    attente = true;
+                    //t1.Start();
                 }
             }
+        }
 
+        private void btn_Click_J2(object sender)
+        {
+            Button btn = ((Button)sender);
+            if (nombreDeMinesTrouvees + nombreDeMinesTrouveesParJ2 < nombreDeMines
+                && ((typeEmplacement)btn.Tag) == typeEmplacement.Mine)
+            {
+                btn.Text = CHARACTERTROUVE;
+                btn.ForeColor = Color.White;
+                btn.BackColor = Color.Red;
+
+                nombreDeMinesTrouveesParJ2++;
+                afficheMinesTrouvees();
+
+                if (nombreDeMinesTrouvees + nombreDeMinesTrouveesParJ2 == nombreDeMines)
+                {
+                    if (nombreDeMinesTrouvees > nombreDeMinesTrouveesParJ2) victoire();
+                    if (nombreDeMinesTrouvees < nombreDeMinesTrouveesParJ2) defaite();
+                    if (nombreDeMinesTrouvees == nombreDeMinesTrouveesParJ2) exaequo();
+
+                    etatCourant = etatPartie.Fini;
+                    toolStripStatusLabel.Text = "Fini";
+                    toolStripStatusLabel.ForeColor = Color.Black;
+                    statusStrip.Refresh();
+                }
+
+            }
+            else if (((typeEmplacement)btn.Tag) != typeEmplacement.Mine) //Sinon il faut explorer les cases avoisinantes
+            {
+                RechercheRecursive(listeDesEmplacements.IndexOf(btn));
+                etatCourant = etatPartie.EnCours;
+                toolStripStatusLabel.Text = "A votre tour";
+                toolStripStatusLabel.ForeColor = Color.Green;
+                statusStrip.Refresh();
+                attente = false;
+            }
         }
 
         /// Exploration récursive des cases du damier, index = numéro de la case de départ
