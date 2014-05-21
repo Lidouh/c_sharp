@@ -14,3 +14,6 @@ F:\ISIB3\Compl Prog\DemServer\DemServer\bin\Debug\DemServer.pdb
 F:\ISIB3\Compl Prog\DemServer\DemServer\obj\x86\Debug\DemServer.csprojResolveAssemblyReference.cache
 F:\ISIB3\c_sharp\DemServer\DemServer\obj\x86\Debug\DemServer.exe
 F:\ISIB3\c_sharp\DemServer\DemServer\obj\x86\Debug\DemServer.pdb
+F:\ISIB3\c_sharp\DemServer\DemServer\bin\Debug\DemServer.exe
+F:\ISIB3\c_sharp\DemServer\DemServer\bin\Debug\DemServer.pdb
+F:\ISIB3\c_sharp\DemServer\DemServer\obj\x86\Debug\DemServer.csprojResolveAssemblyReference.cache

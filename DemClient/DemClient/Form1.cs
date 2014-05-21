@@ -22,9 +22,10 @@ namespace DemClient
         TcpClient client = new TcpClient();
         NetworkStream stream;
         Thread t1;
-        bool attente = false;
-        delegate void btnClick(object sender);
-        private delegate void ChangeToolStripStatus(string str, Color color);
+        bool stopRead = false;
+        delegate void btnClickDeleg(object sender);
+        private delegate void ChangeToolStripStatusDeleg(string str, Color color);
+        delegate void initialiseDeleg();
 
         /// Largeur des buttons servant à représenter les cases du damier
         const int LARGEUREMPLACEMENT = 20;
@@ -51,6 +52,7 @@ namespace DemClient
         /// Etat de la partie (cf enumération 'etatPartie')
         private etatPartie etatCourant;
 
+        /// Méthode qui lit et retourne le bit correspondant à l'index
         public static bool GetBit(byte[] self, int index)
         {
             int byteIndex = index / 8;
@@ -63,11 +65,10 @@ namespace DemClient
         public Form1()
         {
             InitializeComponent();
-
             client.Connect(serverAddress, 8003);
             stream = client.GetStream();
+            t1 = new Thread(threadRead);
             //On lance la procédure qui initilialise un nouveau jeu
-            t1 = new Thread(threadAttente);
             initialise();
             t1.Start();
         }
@@ -76,9 +77,9 @@ namespace DemClient
         {
             byte[] rcvBytes = new byte[32];
             //On positionne les différents paramètres
-                    largeur = 16;
-                    longueur = 16;
-                    nombreDeMines = 40;
+            largeur = 16;
+            longueur = 16;
+            nombreDeMines = 40;
 
             //On nettoie la liste des emplacements
             if (listeDesEmplacements != null)
@@ -92,7 +93,8 @@ namespace DemClient
             nombreDeMinesTrouvees = 0;
             nombreDeMinesTrouveesParJ2 = 0;
             afficheMinesTrouvees();
-     
+            abandonToolStripMenuItem.Text = "Abandon";
+
             //A qui est le tour
             byte[] rcvBytesTour = new byte[1];
             stream.Read(rcvBytesTour, 0, rcvBytesTour.Length);
@@ -103,6 +105,7 @@ namespace DemClient
                 toolStripStatusLabel.Text = "A votre tour";
                 toolStripStatusLabel.ForeColor = Color.Green;
                 statusStrip.Refresh();
+                abandonToolStripMenuItem.ForeColor = Color.Black;
             }
             if (rcvBytesTour[0] == 0)
             {
@@ -110,40 +113,44 @@ namespace DemClient
                 toolStripStatusLabel.Text = "En attente";
                 toolStripStatusLabel.ForeColor = Color.Orange;
                 statusStrip.Refresh();
-                attente = true;
+                abandonToolStripMenuItem.ForeColor = Color.Gray;
             }
         }
 
+        /// Méthode pour le delegate ChangeToolStripStatusDeleg
         private void ChangeToolStripStatusLabel(string str, Color color)
         {
             toolStripStatusLabel.Text = str;
             toolStripStatusLabel.ForeColor = color;
             statusStrip.Refresh();
+            abandonToolStripMenuItem.Text = "Rejouer";
+            abandonToolStripMenuItem.ForeColor = Color.Black;
         }
 
-        private void threadAttente() {
-            while (true)
+        private void threadRead()
+        {
+            while (!stopRead)
             {
-                while (attente)
+                byte[] rcvBytesClick = new byte[4];
+                byte[] rcvBytesTour = new byte[1];
+
+                stream.Read(rcvBytesClick, 0, rcvBytesClick.Length);
+                stream.Read(rcvBytesTour, 0, rcvBytesTour.Length);
+
+                if (rcvBytesTour[0] == 25) //l'autre a abandonné
                 {
-                    byte[] rcvBytesClick = new byte[1024];
-                    byte[] rcvBytesTour = new byte[1];
-
-                    stream.Read(rcvBytesClick, 0, rcvBytesClick.Length);
-                    stream.Read(rcvBytesTour, 0, rcvBytesTour.Length);
-
-                    if (rcvBytesTour[0] == 25) //l'autre a abandonné
-                    {
-                        victoire();
-                        etatCourant = etatPartie.Fini;
-                        this.Invoke(new ChangeToolStripStatus(ChangeToolStripStatusLabel), "Fini", Color.Black);
-                        attente = false;
-                    }
-                    else
-                    {
-                        int rcvClick = BitConverter.ToInt32(rcvBytesClick, 0);
-                        this.Invoke(new btnClick(btn_Click_J2), listeDesEmplacements[rcvClick]);
-                    }
+                    victoire();
+                    etatCourant = etatPartie.Fini;
+                    this.Invoke(new ChangeToolStripStatusDeleg(ChangeToolStripStatusLabel), "Fini", Color.Black);
+                }
+                else if (rcvBytesTour[0] == 5)  //rejouer
+                {
+                    this.Invoke(new initialiseDeleg(initialise));
+                }
+                else
+                {
+                    int rcvClick = BitConverter.ToInt32(rcvBytesClick, 0);
+                    this.Invoke(new btnClickDeleg(btn_Click_J2), listeDesEmplacements[rcvClick]);
                 }
             }
         }
@@ -214,17 +221,27 @@ namespace DemClient
         /// ToolStrip d'abandon
         private void nouveauToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if(etatCourant != etatPartie.Fini){
-            defaite();
-            byte[] sndBytesClick = new byte[1024];
-            stream.Write(sndBytesClick, 0, sndBytesClick.Length);
-            byte[] sndBytesTour = new byte[] { 25 };
-            stream.Write(sndBytesTour, 0, sndBytesTour.Length);
-            stream.Flush();
-            etatCourant = etatPartie.Fini;
-            toolStripStatusLabel.Text = "Fini";
-            toolStripStatusLabel.ForeColor = Color.Black;
-            statusStrip.Refresh();
+            if (etatCourant == etatPartie.EnCours)  //abandonner
+            {
+                defaite();
+                byte[] sndBytesClick = new byte[4];
+                stream.Write(sndBytesClick, 0, sndBytesClick.Length);
+                byte[] sndBytesTour = new byte[] { 25 };
+                stream.Write(sndBytesTour, 0, sndBytesTour.Length);
+                stream.Flush();
+                etatCourant = etatPartie.Fini;
+                toolStripStatusLabel.Text = "Fini";
+                toolStripStatusLabel.ForeColor = Color.Black;
+                statusStrip.Refresh();
+                abandonToolStripMenuItem.Text = "Rejouer";
+            }
+            else if (etatCourant == etatPartie.Fini)  //rejouer
+            {
+                byte[] sndBytesClick = new byte[4];
+                stream.Write(sndBytesClick, 0, sndBytesClick.Length);
+                byte[] sndBytesTour = new byte[] { 5 };
+                stream.Write(sndBytesTour, 0, sndBytesTour.Length);
+                stream.Flush();
             }
         }
 
@@ -235,7 +252,7 @@ namespace DemClient
             txt_nbMinesRestantes.Text = Convert.ToString(nombreDeMines - nombreDeMinesTrouvees - nombreDeMinesTrouveesParJ2);
         }
 
-        private void creerDamierDepuisServ( byte [] tabMine)
+        private void creerDamierDepuisServ(byte[] tabMine)
         {
             Button btn;
             grillePanel.Controls.Clear();
@@ -270,7 +287,8 @@ namespace DemClient
             {
                 for (int j = 0; j < 8; j++)
                 {
-                    if (GetBit(tabMine,index)){
+                    if (GetBit(tabMine, index))
+                    {
                         ((Button)listeDesEmplacements[index]).Tag = typeEmplacement.Mine;
                     }
                     index++;
@@ -342,7 +360,7 @@ namespace DemClient
         {
             MessageBox.Show("Ex aequo :o", "Fin");
         }
-        
+
         void btn_Click(object sender, EventArgs e)
         {
             Button btn = ((Button)sender);
@@ -358,7 +376,7 @@ namespace DemClient
                     nombreDeMinesTrouvees++;
                     afficheMinesTrouvees();
 
-                    byte[] sndBytesMine = new byte[1024];
+                    byte[] sndBytesMine = new byte[4];
                     sndBytesMine = BitConverter.GetBytes(listeDesEmplacements.IndexOf(btn));
                     stream.Write(sndBytesMine, 0, sndBytesMine.Length);
                     byte[] sndBytesAtt = new byte[] { 0 };
@@ -371,16 +389,17 @@ namespace DemClient
                         if (nombreDeMinesTrouvees < nombreDeMinesTrouveesParJ2) defaite();
                         if (nombreDeMinesTrouvees == nombreDeMinesTrouveesParJ2) exaequo();
 
-                        byte[] sndBytesClick = new byte[1024];
+                        byte[] sndBytesClick = new byte[4];
                         sndBytesClick = BitConverter.GetBytes(listeDesEmplacements.IndexOf(btn));
                         stream.Write(sndBytesClick, 0, sndBytesClick.Length);
-                        byte[] sndBytesTour = new byte[] { 255 };
+                        byte[] sndBytesTour = new byte[] { 250 };
                         stream.Write(sndBytesTour, 0, sndBytesTour.Length);
                         stream.Flush();
                         etatCourant = etatPartie.Fini;
                         toolStripStatusLabel.Text = "Fini";
                         toolStripStatusLabel.ForeColor = Color.Black;
                         statusStrip.Refresh();
+                        abandonToolStripMenuItem.Text = "Rejouer";
                     }
 
                 }
@@ -391,14 +410,13 @@ namespace DemClient
                     toolStripStatusLabel.Text = "En attente";
                     toolStripStatusLabel.ForeColor = Color.Orange;
                     statusStrip.Refresh();
-                    byte[] sndBytesClick = new byte[1024];
+                    byte[] sndBytesClick = new byte[4];
                     sndBytesClick = BitConverter.GetBytes(listeDesEmplacements.IndexOf(btn));
                     stream.Write(sndBytesClick, 0, sndBytesClick.Length);
                     byte[] sndBytesTour = new byte[] { 255 };
                     stream.Write(sndBytesTour, 0, sndBytesTour.Length);
                     stream.Flush();
-                    attente = true;
-                    //t1.Start();
+                    abandonToolStripMenuItem.ForeColor = Color.Gray;
                 }
             }
         }
@@ -426,6 +444,8 @@ namespace DemClient
                     toolStripStatusLabel.Text = "Fini";
                     toolStripStatusLabel.ForeColor = Color.Black;
                     statusStrip.Refresh();
+                    abandonToolStripMenuItem.Text = "Rejouer";
+                    abandonToolStripMenuItem.ForeColor = Color.Black;
                 }
 
             }
@@ -436,7 +456,7 @@ namespace DemClient
                 toolStripStatusLabel.Text = "A votre tour";
                 toolStripStatusLabel.ForeColor = Color.Green;
                 statusStrip.Refresh();
-                attente = false;
+                abandonToolStripMenuItem.ForeColor = Color.Black;
             }
         }
 
