@@ -13,6 +13,15 @@
         /// <param name="disposing">true si les ressources managées doivent être supprimées ; sinon, false.</param>
         protected override void Dispose(bool disposing)
         {
+            if(!stopRead)
+            {
+                byte[] sndBytesClick = new byte[4];
+                stream.Write(sndBytesClick, 0, sndBytesClick.Length);
+                byte[] sndBytesTour = new byte[] { 50 };
+                stream.Write(sndBytesTour, 0, sndBytesTour.Length);
+                stream.Flush();
+            }
+
             if (disposing && (components != null))
             {
                 components.Dispose();
@@ -43,6 +52,7 @@
             this.txt_nbMinesRestantes = new System.Windows.Forms.TextBox();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.quitterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.joueur2Panel.SuspendLayout();
             this.joueur1Panel.SuspendLayout();
             this.menuStrip1.SuspendLayout();
@@ -136,7 +146,8 @@
             // partieToolStripMenuItem
             // 
             this.partieToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.abandonToolStripMenuItem});
+            this.abandonToolStripMenuItem,
+            this.quitterToolStripMenuItem});
             this.partieToolStripMenuItem.Name = "partieToolStripMenuItem";
             this.partieToolStripMenuItem.Size = new System.Drawing.Size(49, 20);
             this.partieToolStripMenuItem.Text = "Partie";
@@ -144,7 +155,7 @@
             // abandonToolStripMenuItem
             // 
             this.abandonToolStripMenuItem.Name = "abandonToolStripMenuItem";
-            this.abandonToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
+            this.abandonToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.abandonToolStripMenuItem.Text = "Abandon";
             this.abandonToolStripMenuItem.Click += new System.EventHandler(this.nouveauToolStripMenuItem_Click);
             // 
@@ -191,6 +202,13 @@
             this.toolStripStatusLabel.Size = new System.Drawing.Size(27, 17);
             this.toolStripStatusLabel.Text = "Etat";
             // 
+            // quitterToolStripMenuItem
+            // 
+            this.quitterToolStripMenuItem.Name = "quitterToolStripMenuItem";
+            this.quitterToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.quitterToolStripMenuItem.Text = "Quitter";
+            this.quitterToolStripMenuItem.Click += new System.EventHandler(this.quitterToolStripMenuItem_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -236,6 +254,7 @@
         private System.Windows.Forms.Label J1label;
         private System.Windows.Forms.StatusStrip statusStrip;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel;
+        private System.Windows.Forms.ToolStripMenuItem quitterToolStripMenuItem;
     }
 }
 

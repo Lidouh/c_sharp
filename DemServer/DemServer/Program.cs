@@ -71,77 +71,116 @@ namespace DemServer
             return tabBytes;
         }
 
-        private static void threadReadStm(NetworkStream stm1, NetworkStream stm2)
+        private static void threadReadStm(TcpClient cl1, TcpClient cl2)
         {
+            NetworkStream stm1 = cl1.GetStream();
+            NetworkStream stm2 = cl2.GetStream();
+
             byte[] rcvBytesTour = new byte[1];
             byte[] rcvBytesClick = new byte[4];
-            while (stm1.Read(rcvBytesClick, 0, rcvBytesClick.Length) != 0)
+
+            try
             {
-                stm1.Read(rcvBytesTour, 0, rcvBytesTour.Length);
-                Console.WriteLine("Le 1e client a écrit");
-
-                stm2.Write(rcvBytesClick, 0, rcvBytesClick.Length);
-                stm2.Write(rcvBytesTour, 0, rcvBytesTour.Length);
-                Console.WriteLine("Le 2e client a lu");
-
-                if (rcvBytesTour[0] == 5)  //si l'un des clients a clické sur Rejouer
+                while (stm1.Read(rcvBytesClick, 0, rcvBytesClick.Length) != 0)
                 {
-                    stm1.Write(rcvBytesClick, 0, rcvBytesClick.Length);
-                    stm1.Write(rcvBytesTour, 0, rcvBytesTour.Length);
-                    Console.WriteLine("Le 1e client a lu");
-                    byte[] tabBytes = new byte[32]; // car 8*32 = 256 bits = 16*16
-                    tabBytes = creerDamier();
-                    stm1.Write(tabBytes, 0, tabBytes.Length);
-                    byte[] sndBytesTour = new byte[] { 255 };
-                    stm1.Write(sndBytesTour, 0, sndBytesTour.Length);
-                    Console.WriteLine("C'est au tour du 1e client");
-                    stm1.Flush();
+                    stm1.Read(rcvBytesTour, 0, rcvBytesTour.Length);
+                    Console.WriteLine("Le 1e client a écrit");
 
-                    stm2.Write(tabBytes, 0, tabBytes.Length);
-                    byte[] sndBytesAtt = new byte[] { 0 };
-                    stm2.Write(sndBytesAtt, 0, sndBytesAtt.Length);
-                    Console.WriteLine("Le 2e client est en attente");
-                    stm2.Flush();
-                }
-            }
-        }
-
-        private static void threadReadStm2(NetworkStream stm2, NetworkStream stm1)   //non utilisé
-        {
-            byte[] rcvBytesTour = new byte[1];
-            byte[] rcvBytesClick = new byte[4];
-            while (stm2.Read(rcvBytesClick, 0, rcvBytesClick.Length) != 0)
-            {
-                stm2.Read(rcvBytesTour, 0, rcvBytesTour.Length);
-                Console.WriteLine("Le 2e client a écrit");
-
-                stm1.Write(rcvBytesClick, 0, rcvBytesClick.Length);
-                stm1.Write(rcvBytesTour, 0, rcvBytesTour.Length);
-                Console.WriteLine("Le 1e client a lu");
-
-                if (rcvBytesTour[0] == 5)
-                {
                     stm2.Write(rcvBytesClick, 0, rcvBytesClick.Length);
                     stm2.Write(rcvBytesTour, 0, rcvBytesTour.Length);
                     Console.WriteLine("Le 2e client a lu");
-                    byte[] tabBytes = new byte[32]; // car 8*32 = 256 bits = 16*16
-                    tabBytes = creerDamier();
-                    stm2.Write(tabBytes, 0, tabBytes.Length);
-                    byte[] sndBytesTour = new byte[] { 255 };
-                    stm2.Write(sndBytesTour, 0, sndBytesTour.Length);
-                    Console.WriteLine("C'est au tour du 2e client");
-                    stm2.Flush();
 
-                    stm1.Write(tabBytes, 0, tabBytes.Length);
-                    byte[] sndBytesAtt = new byte[] { 0 };
-                    stm1.Write(sndBytesAtt, 0, sndBytesAtt.Length);
-                    Console.WriteLine("Le 1e client est en attente");
-                    stm1.Flush();
+                    if (rcvBytesTour[0] == 5)  //si l'un des clients a clické sur Rejouer
+                    {
+                        stm1.Write(rcvBytesClick, 0, rcvBytesClick.Length);
+                        stm1.Write(rcvBytesTour, 0, rcvBytesTour.Length);
+                        Console.WriteLine("Le 1e client a lu");
+                        byte[] tabBytes = new byte[32]; // car 8*32 = 256 bits = 16*16
+                        tabBytes = creerDamier();
+                        stm1.Write(tabBytes, 0, tabBytes.Length);
+                        byte[] sndBytesTour = new byte[] { 255 };
+                        stm1.Write(sndBytesTour, 0, sndBytesTour.Length);
+                        Console.WriteLine("C'est au tour du 1e client");
+                        stm1.Flush();
+
+                        stm2.Write(tabBytes, 0, tabBytes.Length);
+                        byte[] sndBytesAtt = new byte[] { 0 };
+                        stm2.Write(sndBytesAtt, 0, sndBytesAtt.Length);
+                        Console.WriteLine("Le 2e client est en attente");
+                        stm2.Flush();
+                    }
+                    if (rcvBytesTour[0] == 50)   //si l'un des clients a quitté le jeu
+                    {
+                        stm1.Close();
+                        cl1.Close();
+                        Console.WriteLine("1e client fermé");
+                    }
+
                 }
+                //stm1.Close();
+                //cl1.Close();
+                //Console.WriteLine("1e client fermé");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error..... " + e.StackTrace);
+                //Console.ReadLine();
+            }
+                
+        }
+
+        private static void threadReadStm2(TcpClient cl2, TcpClient cl1)   //non utilisé
+        {
+            NetworkStream stm2 = cl2.GetStream();
+            NetworkStream stm1 = cl1.GetStream();
+
+            byte[] rcvBytesTour = new byte[1];
+            byte[] rcvBytesClick = new byte[4];
+
+            try
+            {
+                while (stm2.Read(rcvBytesClick, 0, rcvBytesClick.Length) != 0)
+                {
+                    stm2.Read(rcvBytesTour, 0, rcvBytesTour.Length);
+                    Console.WriteLine("Le 2e client a écrit");
+
+                    stm1.Write(rcvBytesClick, 0, rcvBytesClick.Length);
+                    stm1.Write(rcvBytesTour, 0, rcvBytesTour.Length);
+                    Console.WriteLine("Le 1e client a lu");
+
+                    if (rcvBytesTour[0] == 5)  //si l'un des clients a clické sur Rejouer
+                    {
+                        stm2.Write(rcvBytesClick, 0, rcvBytesClick.Length);
+                        stm2.Write(rcvBytesTour, 0, rcvBytesTour.Length);
+                        Console.WriteLine("Le 2e client a lu");
+                        byte[] tabBytes = new byte[32]; // car 8*32 = 256 bits = 16*16
+                        tabBytes = creerDamier();
+                        stm2.Write(tabBytes, 0, tabBytes.Length);
+                        byte[] sndBytesTour = new byte[] { 255 };
+                        stm2.Write(sndBytesTour, 0, sndBytesTour.Length);
+                        Console.WriteLine("C'est au tour du 2e client");
+                        stm2.Flush();
+
+                        stm1.Write(tabBytes, 0, tabBytes.Length);
+                        byte[] sndBytesAtt = new byte[] { 0 };
+                        stm1.Write(sndBytesAtt, 0, sndBytesAtt.Length);
+                        Console.WriteLine("Le 1e client est en attente");
+                        stm1.Flush();
+                    }
+
+                }
+                stm2.Close();
+                cl2.Close();
+                Console.WriteLine("2e client fermé");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error..... " + e.StackTrace);
+                //Console.ReadLine();
             }
         }
-        
-        
+
+
         static void Main(string[] args)
         {
             try
@@ -161,7 +200,6 @@ namespace DemServer
                 Console.WriteLine("Second client connected.....");
                 NetworkStream stm1 = cl1.GetStream();
                 NetworkStream stm2 = cl2.GetStream();
-                
                 byte[] tabBytes = new byte[32]; // car 8*32 = 256 bits = 16*16
                 tabBytes = creerDamier();
                 stm1.Write(tabBytes, 0, tabBytes.Length);
@@ -176,19 +214,12 @@ namespace DemServer
                 Console.WriteLine("Le 2e client est en attente");
                 stm2.Flush();
 
-                Thread t1 = new Thread(delegate() { threadReadStm(stm1, stm2); });
+                Thread t1 = new Thread(delegate() { threadReadStm(cl1, cl2); });
                 t1.Start();
-                Thread t2 = new Thread(delegate() { threadReadStm(stm2, stm1); });
+                Thread t2 = new Thread(delegate() { threadReadStm(cl2, cl1); });
                 t2.Start();
 
-                //stm1.Close();
-                //cl1.Close();
-                //Console.WriteLine("1e client fermé");
-                //stm2.Close();
-                //cl2.Close();
-                //Console.WriteLine("2e client fermé");
                 //myList.Stop();
-
             }
             catch (Exception e)
             {

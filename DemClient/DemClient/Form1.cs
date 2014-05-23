@@ -26,6 +26,8 @@ namespace DemClient
         delegate void btnClickDeleg(object sender);
         private delegate void ChangeToolStripStatusDeleg(string str, Color color);
         delegate void initialiseDeleg();
+        delegate void quitterDeleg(object sender, EventArgs e);
+        delegate void MessageBoxDeleg();
 
         /// Largeur des buttons servant à représenter les cases du damier
         const int LARGEUREMPLACEMENT = 20;
@@ -70,6 +72,7 @@ namespace DemClient
             t1 = new Thread(threadRead);
             //On lance la procédure qui initilialise un nouveau jeu
             initialise();
+            t1.IsBackground = true;
             t1.Start();
         }
 
@@ -131,6 +134,9 @@ namespace DemClient
         {
             while (!stopRead)
             {
+                EventArgs e = new EventArgs();
+                object sender = new object();
+
                 byte[] rcvBytesClick = new byte[4];
                 byte[] rcvBytesTour = new byte[1];
 
@@ -139,7 +145,7 @@ namespace DemClient
 
                 if (rcvBytesTour[0] == 25) //l'autre a abandonné
                 {
-                    victoire();
+                    this.Invoke(new MessageBoxDeleg(victoire));
                     etatCourant = etatPartie.Fini;
                     this.Invoke(new ChangeToolStripStatusDeleg(ChangeToolStripStatusLabel), "Fini", Color.Black);
                 }
@@ -147,12 +153,19 @@ namespace DemClient
                 {
                     this.Invoke(new initialiseDeleg(initialise));
                 }
+                else if (rcvBytesTour[0] == 50)  //quitter
+                {
+                    stopRead = true;
+                    this.Invoke(new MessageBoxDeleg(quitter));
+                    this.Invoke(new quitterDeleg(quitterToolStripMenuItem_Click), sender, e);
+                }
                 else
                 {
                     int rcvClick = BitConverter.ToInt32(rcvBytesClick, 0);
                     this.Invoke(new btnClickDeleg(btn_Click_J2), listeDesEmplacements[rcvClick]);
                 }
             }
+
         }
 
         private void tour()   //plus utilisé (commit: réseau : affichage tour à tour)
@@ -359,6 +372,11 @@ namespace DemClient
         private void exaequo()
         {
             MessageBox.Show("Ex aequo :o", "Fin");
+        }
+
+        private void quitter()
+        {
+            MessageBox.Show("L'autre joueur a fermé le jeu :o", "Fin");
         }
 
         void btn_Click(object sender, EventArgs e)
@@ -669,6 +687,11 @@ namespace DemClient
             message += "Auteur      :  Lidouh Samia" + (char)10;
             message += "Source      :  http://codes-sources.commentcamarche.net/" + (char)10 + (char)10;
             MessageBox.Show(message, "A propos...");
+        }
+
+        private void quitterToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.Dispose();
         }
 
 
