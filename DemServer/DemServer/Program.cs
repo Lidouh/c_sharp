@@ -73,26 +73,32 @@ namespace DemServer
 
         private static void threadReadStm(TcpClient cl1, TcpClient cl2)
         {
-            NetworkStream stm1 = cl1.GetStream();
-            NetworkStream stm2 = cl2.GetStream();
-
-            byte[] rcvBytesTour = new byte[1];
-            byte[] rcvBytesClick = new byte[4];
-
             try
             {
+                NetworkStream stm1 = cl1.GetStream();
+                NetworkStream stm2 = cl2.GetStream();
+
+                byte[] rcvBytesPseudo = new byte[100];
+                stm1.Read(rcvBytesPseudo, 0, rcvBytesPseudo.Length);
+                stm2.Write(rcvBytesPseudo, 0, rcvBytesPseudo.Length);
+                Console.WriteLine("Pseudo envoyé");
+
+                byte[] rcvBytesTour = new byte[1];
+                byte[] rcvBytesClick = new byte[4];
+
+
                 while (stm1.Read(rcvBytesClick, 0, rcvBytesClick.Length) != 0)
                 {
                     stm1.Read(rcvBytesTour, 0, rcvBytesTour.Length);
                     Console.WriteLine("Le 1e client a écrit");
-
                     stm2.Write(rcvBytesClick, 0, rcvBytesClick.Length);
                     stm2.Write(rcvBytesTour, 0, rcvBytesTour.Length);
+                    stm2.Flush();
                     Console.WriteLine("Le 2e client a lu");
 
                     if (rcvBytesTour[0] == 5)  //si l'un des clients a clické sur Rejouer
                     {
-                        stm1.Write(rcvBytesClick, 0, rcvBytesClick.Length);
+                        stm1.Write(rcvBytesClick, 0, rcvBytesClick.Length);  //pour qu'il initialise a travers son threadRead
                         stm1.Write(rcvBytesTour, 0, rcvBytesTour.Length);
                         Console.WriteLine("Le 1e client a lu");
                         byte[] tabBytes = new byte[32]; // car 8*32 = 256 bits = 16*16
@@ -109,24 +115,17 @@ namespace DemServer
                         Console.WriteLine("Le 2e client est en attente");
                         stm2.Flush();
                     }
-                    if (rcvBytesTour[0] == 50)   //si l'un des clients a quitté le jeu
-                    {
-                        stm1.Close();
-                        cl1.Close();
-                        Console.WriteLine("1e client fermé");
-                    }
-
                 }
-                //stm1.Close();
-                //cl1.Close();
-                //Console.WriteLine("1e client fermé");
+                stm1.Close();
+                cl1.Close();
+                Console.WriteLine("1e client fermé");
             }
             catch (Exception e)
             {
                 Console.WriteLine("Error..... " + e.StackTrace);
-                //Console.ReadLine();
+                Console.ReadLine();
             }
-                
+
         }
 
         private static void threadReadStm2(TcpClient cl2, TcpClient cl1)   //non utilisé
