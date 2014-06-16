@@ -174,9 +174,10 @@ namespace DemServer
         {
             try
             {
-                IPAddress ipAd = IPAddress.Parse("127.0.0.1"); //use local m/c IP address, and use the same in the client
-                /* Initializes the Listener */
-                TcpListener myList = new TcpListener(ipAd, 8003);
+                //IPAddress ipAd = IPAddress.Parse("127.0.0.1"); //use local m/c IP address, and use the same in the client
+                ///* Initializes the Listener */
+                TcpListener myList = new TcpListener(IPAddress.Any, 8003);
+                //TcpListener myList = new TcpListener(ipAd, 8003);
                 /* Start Listeneting at the specified port */
                 myList.Start();
                 Console.WriteLine("The server is running at port 8003...");

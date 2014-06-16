@@ -90,6 +90,12 @@
   <ItemGroup>
     <None Include="Resources\Animated Gif Arrows %28202%29.GIF" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\flagnotfound.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\flagfound.wav" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

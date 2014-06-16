@@ -13,6 +13,7 @@ using System.Threading;
 using System.Runtime.Serialization.Formatters.Binary;
 
 using System.IO;
+using System.Media;
 
 namespace DemClient
 {
@@ -166,29 +167,37 @@ namespace DemClient
 
         private void threadRead()
         {
-            while (!stopRead)
+            try
             {
-                byte[] rcvBytesClick = new byte[2];
-                stream.Read(rcvBytesClick, 0, rcvBytesClick.Length);
-
-                switch (rcvBytesClick[0])
+                while (!stopRead)
                 {
-                    case 0:
-                        int rcvClick = rcvBytesClick[1];
-                        this.Invoke(new DelBtnClick(btn_Click_J2), listeDesEmplacements[rcvClick]);
-                        break;
-                    case 1:  //l'autre a abandonné
-                        this.Invoke(new DelMessageBox(victoire));
-                        break;
-                    case 2:  //rejouer
-                        this.Invoke(new DelInitialise(initialise));
-                        break;
-                    case 3:  //quitter
-                        stopRead = true;
-                        this.Invoke(new DelMessageBox(quitter));
-                        this.Invoke(new DelDispose(Dispose));
-                        break;
+                    byte[] rcvBytesClick = new byte[2];
+                    stream.Read(rcvBytesClick, 0, rcvBytesClick.Length);
+
+                    switch (rcvBytesClick[0])
+                    {
+                        case 0:
+                            int rcvClick = rcvBytesClick[1];
+                            this.Invoke(new DelBtnClick(btn_Click_J2), listeDesEmplacements[rcvClick]);
+                            break;
+                        case 1:  //l'autre a abandonné
+                            this.Invoke(new DelMessageBox(victoire));
+                            break;
+                        case 2:  //rejouer
+                            this.Invoke(new DelInitialise(initialise));
+                            break;
+                        case 3:  //quitter
+                            stopRead = true;
+                            this.Invoke(new DelMessageBox(quitter));
+                            this.Invoke(new DelDispose(Dispose));
+                            break;
+                    }
                 }
+            }
+            catch 
+            {
+                this.Invoke(new DelMessageBox(serveurHS));
+                this.Invoke(new DelDispose(Dispose));
             }
         }
 
@@ -397,6 +406,11 @@ namespace DemClient
             MessageBox.Show("L'autre joueur a quitté le jeu :o", "Fin");
         }
 
+        private void serveurHS()
+        {
+            MessageBox.Show("Désolé, Le serveur est HS.", "Erreur");
+        }
+
         void btn_Click(object sender, EventArgs e)
         {
             Button btn = ((Button)sender);
@@ -407,6 +421,7 @@ namespace DemClient
                 if (nombreDeMinesTrouvees + nombreDeMinesTrouveesParJ2 < nombreDeMines
                     && ((typeEmplacement)btn.Tag) == typeEmplacement.Mine)
                 {
+                    playSound(Properties.Resources.flagfound);
                     btn.Text = CHARACTERTROUVE;
                     btn.ForeColor = Color.White;
                     btn.BackColor = Color.Blue;
@@ -429,6 +444,7 @@ namespace DemClient
                 }
                 else if (((typeEmplacement)btn.Tag) != typeEmplacement.Mine) //Sinon il faut explorer les cases avoisinantes
                 {
+                    playSound(Properties.Resources.flagnotfound);
                     RechercheRecursive(listeDesEmplacements.IndexOf(btn));
                     ChangeStatusStrip(etatPartie.EnAttente, "En attente", Color.DarkOrange);
                     sndBytesClick[1] = (byte)listeDesEmplacements.IndexOf(btn);
@@ -447,6 +463,7 @@ namespace DemClient
             if (nombreDeMinesTrouvees + nombreDeMinesTrouveesParJ2 < nombreDeMines
                 && ((typeEmplacement)btn.Tag) == typeEmplacement.Mine)
             {
+                playSound(Properties.Resources.flagfound);
                 btn.Text = CHARACTERTROUVE;
                 btn.ForeColor = Color.White;
                 btn.BackColor = Color.Red;
@@ -464,9 +481,18 @@ namespace DemClient
             }
             else if (((typeEmplacement)btn.Tag) != typeEmplacement.Mine) //Sinon il faut explorer les cases avoisinantes
             {
+                playSound(Properties.Resources.flagnotfound);
                 RechercheRecursive(listeDesEmplacements.IndexOf(btn));
                 ChangeStatusStrip(etatPartie.EnCours, "A votre tour", Color.Green);
             }
+        }
+
+        private void playSound(Stream playerStream)
+        {
+            SoundPlayer player = new SoundPlayer();
+            player.Stream = playerStream;
+            player.LoadAsync();
+            player.Play();
         }
 
         /// Exploration récursive des cases du damier, index = numéro de la case de départ

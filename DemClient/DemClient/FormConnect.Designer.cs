@@ -15,7 +15,7 @@
         {
             if (!stopAttenteJ2)
             {
-                streamConnect(j1);
+                clientConnect(j1);
             }
 
             if (disposing && (components != null))

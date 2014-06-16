@@ -17,7 +17,6 @@ namespace DemClient
     {
         private static String adresseIP ;
         private int port;
-        private String pseudo;
         TcpClient client = new TcpClient();
         NetworkStream stream;
         Joueur j1;
@@ -72,14 +71,12 @@ namespace DemClient
             Application.Run(new FormJeu(j1));
         }
 
-        private void streamConnect(Joueur j)
+        private void clientConnect(Joueur j)
         {
             port = j.getPort();
             adresseIP = j.getAdreseIP();
-            pseudo = j.getPseudo();
             IPAddress serverAddress = IPAddress.Parse(adresseIP);
             client.Connect(serverAddress, port);
-            stream = client.GetStream();
         }
 
         private void threadAttenteJ2()

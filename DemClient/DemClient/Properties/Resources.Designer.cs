@@ -69,5 +69,23 @@ namespace DemClient.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
+        
+        /// <summary>
+        ///   Recherche une ressource localisée de type System.IO.UnmanagedMemoryStream semblable à System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream flagfound {
+            get {
+                return ResourceManager.GetStream("flagfound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Recherche une ressource localisée de type System.IO.UnmanagedMemoryStream semblable à System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream flagnotfound {
+            get {
+                return ResourceManager.GetStream("flagnotfound", resourceCulture);
+            }
+        }
     }
 }
