@@ -26,10 +26,10 @@ namespace DemClient
         bool stopAttenteJ2 = true;
         public bool attenteJ2 = false;
         Object verrou = new Object();
-        delegate void hideDeleg();
-        delegate void disposeDeleg();
-        delegate void setStatusStripDeleg(String str);
-        delegate void MessageBoxDeleg();  //car sinon la MessageBox n'est pas modale
+        delegate void DelHide();
+        delegate void DelDispose();
+        delegate void DelSetStatusStrip(String str);
+        delegate void DelMessageBox();  //car sinon la MessageBox n'est pas modale
 
         public FormConnect()
         {
@@ -38,23 +38,30 @@ namespace DemClient
 
         private void OKbutton_Click(object sender, EventArgs e)
         {
-            OkButton.Enabled = false;
-            pseudoTextBox.Enabled = false;
-            adresseIPTextBox.Enabled = false;
-            portTextBox.Enabled = false;
-            tAttenteJ2 = new Thread(threadAttenteJ2);
-            t1 = new Thread(threadStatusStrip1);
-            t2 = new Thread(threadStatusStrip2);
-            t3 = new Thread(threadStatusStrip3);
-            tAttenteJ2.IsBackground = true;
-            t1.IsBackground = true;
-            t2.IsBackground = true;
-            t3.IsBackground = true;
-            tAttenteJ2.Start();
-            stopAttenteJ2 = false;
-            t1.Start();
-            t2.Start();
-            t3.Start();
+            if (pseudoTextBox.Text != "")
+            {
+                OkButton.Enabled = false;
+                pseudoTextBox.Enabled = false;
+                adresseIPTextBox.Enabled = false;
+                portTextBox.Enabled = false;
+                tAttenteJ2 = new Thread(threadAttenteJ2);
+                t1 = new Thread(threadStatusStrip1);
+                t2 = new Thread(threadStatusStrip2);
+                t3 = new Thread(threadStatusStrip3);
+                tAttenteJ2.IsBackground = true;
+                t1.IsBackground = true;
+                t2.IsBackground = true;
+                t3.IsBackground = true;
+                tAttenteJ2.Start();
+                stopAttenteJ2 = false;
+                t1.Start();
+                t2.Start();
+                t3.Start();
+                Cursor = Cursors.WaitCursor;
+            }
+            else {
+                MessageBox.Show("Veuillez entrer un pseudo.", "Attention");
+            }
         }
 
         private void threadForm1()   // non utilisé
@@ -82,21 +89,22 @@ namespace DemClient
                 j1 = new Joueur(pseudoTextBox.Text, adresseIPTextBox.Text, Convert.ToInt32(portTextBox.Text));
                 FormJeu jeu = new FormJeu(j1);
                 stopAttenteJ2 = true;
-                this.Invoke(new hideDeleg(Hide));
-                jeu.ShowDialog();   //Le démarrage d'une deuxième boucle de messages sur un seul thread n'est pas une opération valide. Utilisez Form.ShowDialog à la place.
-                jeu.Dispose();   //car sinon n'a pas l'occasion de faire stream.Write
-                this.Invoke(new disposeDeleg(Dispose));
+                this.Invoke(new DelHide(Hide));
+                jeu.ShowDialog();  //Le démarrage d'une deuxième boucle de messages sur un seul thread n'est pas une opération valide. Utilisez Form.ShowDialog à la place.
+                jeu.Dispose();  //car sinon n'a pas l'occasion de faire stream.Write
+                this.Invoke(new DelDispose(Dispose));
             }
-            catch {
-                this.Invoke(new MessageBoxDeleg(serveurHS));
+            catch
+            {
+                this.Invoke(new DelMessageBox(serveurHS));
                 stopAttenteJ2 = true;
-                this.Invoke(new disposeDeleg(Dispose));
+                this.Invoke(new DelDispose(Dispose));
             } //car si on ouvre un client sans serveur, erreur à client.Connect
         }
 
         private void serveurHS()
         {
-            MessageBox.Show("Désolé, le serveur est HS", "Erreur");
+            MessageBox.Show("Le serveur est HS ou l'adresse IP/port sont invalides.", "Erreur");
         }
 
         private void SetStatusStrip(string str)
@@ -113,7 +121,7 @@ namespace DemClient
                 {
                     try
                     {
-                        this.Invoke(new setStatusStripDeleg(SetStatusStrip), "En attente d'un joueur.");
+                        this.Invoke(new DelSetStatusStrip(SetStatusStrip), "En attente d'un joueur.");
                     }
                     catch { }
                     Thread.Sleep(500);
@@ -123,13 +131,14 @@ namespace DemClient
 
         private void threadStatusStrip2()
         {
+            Thread.Sleep(100);
             while (!stopAttenteJ2)
             {
                 lock (verrou)
                 {
                     try
                     {
-                        this.Invoke(new setStatusStripDeleg(SetStatusStrip), "En attente d'un joueur..");
+                        this.Invoke(new DelSetStatusStrip(SetStatusStrip), "En attente d'un joueur..");
                     }catch{ }
                     Thread.Sleep(500);
                 }
@@ -138,12 +147,13 @@ namespace DemClient
 
         private void threadStatusStrip3()
         {
+            Thread.Sleep(200);
             while (!stopAttenteJ2)
             {
                 lock (verrou)
                 {
                     try{
-                    this.Invoke(new setStatusStripDeleg(SetStatusStrip), "En attente d'un joueur...");
+                    this.Invoke(new DelSetStatusStrip(SetStatusStrip), "En attente d'un joueur...");
                     }
                     catch { }
                     Thread.Sleep(500);

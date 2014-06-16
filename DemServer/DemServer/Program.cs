@@ -13,24 +13,32 @@ namespace DemServer
 {
     class Program
     {
-        //méthode qui ecrit dans un tableau de byte en fonction de l'index.
+        //Méthode qui ecrit dans un tableau de byte en fonction de l'index.
         public static byte[] SetBit(byte[] self, int index, bool value)
         {
+            /*
+             * index = position du bit au sein du tableau self (entre 0 et 8*self.length-1)
+             * byteIndex = position du byte dans lequel se trouve le bit (entre 0 et self.length-1)
+             * bitIndex = position du bit au sein du byte (entre 0 et 8)
+             */
             int byteIndex = index / 8;
             int bitIndex = index % 8;
-            byte mask = (byte)(1 << bitIndex);
-
+            byte mask = (byte)(1 << bitIndex);  //1 est décalé vers la gauche de bitIndex
             self[byteIndex] = (byte)(value ? (self[byteIndex] | mask) : (self[byteIndex] & ~mask));
+            /*
+             * si value = true alors seul (self[byteIndex] | mask) est évalué
+             * si value = false alors seul (self[byteIndex] & ~mask) est évalué
+             * ~mask signifie qu'on prend le complément à 1 de mask, cad qu'on inverse tous ses bits
+             */
             return self;
         }
 
-        //méthode qui lit et retourne le bit correspondant à l'index .
+        //Méthode qui lit et retourne le bit correspondant à l'index .
         public static bool GetBit(byte[] self, int index)
         {
             int byteIndex = index / 8;
             int bitIndex = index % 8;
             byte mask = (byte)(1 << bitIndex);
-
             return (self[byteIndex] & mask) != 0;
         }
 
@@ -52,22 +60,16 @@ namespace DemServer
             int nbMinesPosees = 0;
             int rand = 0;
             byte[] tabBytes = new byte[32]; // car 8*32 = 256 bits = 16*16
-
-
             while (nbMinesPosees < nombreDeMines)
             {
-
-                rand = r.Next(0, largeur * longueur);
+                rand = r.Next(0, largeur * longueur);  //largeur*longueur est non inclu dans la plage spécifiée
                 //listeDesEmplacements contient une liste d'objet de type Button, dont le tag est vide ou minée
-
-
                 if (!GetBit(tabBytes, rand))
                 {
                     SetBit(tabBytes, rand, true);
                     nbMinesPosees++;
                 }
             }
-
             return tabBytes;
         }
 
@@ -78,47 +80,35 @@ namespace DemServer
                 NetworkStream stm1 = cl1.GetStream();
                 NetworkStream stm2 = cl2.GetStream();
 
-                byte[] rcvBytesPseudo = new byte[100];
-                stm1.Read(rcvBytesPseudo, 0, rcvBytesPseudo.Length);
-                stm2.Write(rcvBytesPseudo, 0, rcvBytesPseudo.Length);
-                Console.WriteLine("Pseudo envoyé");
-
-                byte[] rcvBytesTour = new byte[1];
-                byte[] rcvBytesClick = new byte[4];
-
+                byte[] rcvBytesClick = new byte[2];
 
                 while (stm1.Read(rcvBytesClick, 0, rcvBytesClick.Length) != 0)
                 {
-                    stm1.Read(rcvBytesTour, 0, rcvBytesTour.Length);
-                    Console.WriteLine("Le 1e client a écrit");
+                    Console.WriteLine("{0} a cliqué --> {1}", cl1.Client.RemoteEndPoint, Thread.CurrentThread.Name);
                     stm2.Write(rcvBytesClick, 0, rcvBytesClick.Length);
-                    stm2.Write(rcvBytesTour, 0, rcvBytesTour.Length);
                     stm2.Flush();
-                    Console.WriteLine("Le 2e client a lu");
-
-                    if (rcvBytesTour[0] == 5)  //si l'un des clients a clické sur Rejouer
+                    
+                    if (rcvBytesClick[0] == 2)  //si l'un des clients a clické sur Rejouer
                     {
                         stm1.Write(rcvBytesClick, 0, rcvBytesClick.Length);  //pour qu'il initialise a travers son threadRead
-                        stm1.Write(rcvBytesTour, 0, rcvBytesTour.Length);
-                        Console.WriteLine("Le 1e client a lu");
                         byte[] tabBytes = new byte[32]; // car 8*32 = 256 bits = 16*16
                         tabBytes = creerDamier();
+
                         stm1.Write(tabBytes, 0, tabBytes.Length);
                         byte[] sndBytesTour = new byte[] { 255 };
                         stm1.Write(sndBytesTour, 0, sndBytesTour.Length);
-                        Console.WriteLine("C'est au tour du 1e client");
                         stm1.Flush();
 
                         stm2.Write(tabBytes, 0, tabBytes.Length);
                         byte[] sndBytesAtt = new byte[] { 0 };
                         stm2.Write(sndBytesAtt, 0, sndBytesAtt.Length);
-                        Console.WriteLine("Le 2e client est en attente");
                         stm2.Flush();
+                        Console.WriteLine("Nouvelle partie");
                     }
                 }
                 stm1.Close();
                 cl1.Close();
-                Console.WriteLine("1e client fermé");
+                Console.WriteLine("{0} terminé", Thread.CurrentThread.Name);
             }
             catch (Exception e)
             {
@@ -193,32 +183,57 @@ namespace DemServer
                 Console.WriteLine("The local End point is :" + myList.LocalEndpoint);
                 Console.WriteLine("Waiting for a connection.....");
                 //Socket s = myList.AcceptSocket();
-                TcpClient cl1 = myList.AcceptTcpClient();
-                Console.WriteLine("First client connected.....");
-                TcpClient cl2 = myList.AcceptTcpClient();
-                Console.WriteLine("Second client connected.....");
-                NetworkStream stm1 = cl1.GetStream();
-                NetworkStream stm2 = cl2.GetStream();
-                byte[] tabBytes = new byte[32]; // car 8*32 = 256 bits = 16*16
-                tabBytes = creerDamier();
-                stm1.Write(tabBytes, 0, tabBytes.Length);
-                byte[] sndBytesTour = new byte[] { 255 };
-                stm1.Write(sndBytesTour, 0, sndBytesTour.Length);
-                Console.WriteLine("C'est au tour du 1e client");
-                stm1.Flush();
+                while (true)
+                {
+                    try
+                    {
+                        TcpClient cl1 = myList.AcceptTcpClient();
+                        Console.WriteLine("First client connected.....");
+                        NetworkStream stm1 = cl1.GetStream();
+                        byte[] rcvBytesPseudoJ1 = new byte[100];
+                        stm1.Read(rcvBytesPseudoJ1, 0, rcvBytesPseudoJ1.Length);
 
-                stm2.Write(tabBytes, 0, tabBytes.Length);
-                byte[] sndBytesAtt = new byte[] { 0 };
-                stm2.Write(sndBytesAtt, 0, sndBytesAtt.Length);
-                Console.WriteLine("Le 2e client est en attente");
-                stm2.Flush();
+                        TcpClient cl2 = myList.AcceptTcpClient();
+                        Console.WriteLine("Second client connected.....");
+                        NetworkStream stm2 = cl2.GetStream();
+                        byte[] rcvBytesPseudoJ2 = new byte[100];
+                        stm2.Read(rcvBytesPseudoJ2, 0, rcvBytesPseudoJ2.Length);
 
-                Thread t1 = new Thread(delegate() { threadReadStm(cl1, cl2); });
-                t1.Start();
-                Thread t2 = new Thread(delegate() { threadReadStm(cl2, cl1); });
-                t2.Start();
+                        stm2.Write(rcvBytesPseudoJ1, 0, rcvBytesPseudoJ1.Length);
+                        stm1.Write(rcvBytesPseudoJ2, 0, rcvBytesPseudoJ2.Length);
+                        byte[] tabBytes = new byte[32]; // car 8*32 = 256 bits = 16*16
+                        tabBytes = creerDamier();
 
-                //myList.Stop();
+                        stm1.Write(tabBytes, 0, tabBytes.Length);
+                        byte[] sndBytesTour = new byte[] { 255 };
+                        stm1.Write(sndBytesTour, 0, sndBytesTour.Length);
+                        Console.WriteLine("C'est au tour du 1e client");
+                        stm1.Flush();
+
+                        stm2.Write(tabBytes, 0, tabBytes.Length);
+                        byte[] sndBytesAtt = new byte[] { 0 };
+                        stm2.Write(sndBytesAtt, 0, sndBytesAtt.Length);
+                        Console.WriteLine("Le 2e client est en attente");
+                        stm2.Flush();
+                        /*
+                         * un thread ne peut avoir qu'un seul paramètre au maximum
+                         * pour plus de paramètres, on peut utiliser une méthode anonyme
+                         * une méthode anonyme permet de passer un bloc de code en paramètre d'un délégué
+                         * il n'est plus nécessaire d'instancier le délégué avec sa méthode nommée
+                         */
+                        Thread t1 = new Thread(delegate() { threadReadStm(cl1, cl2); });
+                        t1.Name = "J1 to J2";
+                        t1.Start();
+                        Thread t2 = new Thread(delegate() { threadReadStm(cl2, cl1); });
+                        t2.Name = "J2 to J1";
+                        t2.Start();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("Error..... " + e.StackTrace);
+                    }
+                    //myList.Stop();
+                }
             }
             catch (Exception e)
             {

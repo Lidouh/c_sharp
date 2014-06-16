@@ -63,19 +63,9 @@ namespace DemClient.Properties {
         /// <summary>
         ///   Recherche une ressource localisée de type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap cur250 {
+        internal static System.Drawing.Bitmap Animated_Gif_Arrows__202_ {
             get {
-                object obj = ResourceManager.GetObject("cur250", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Recherche une ressource localisée de type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap cur254 {
-            get {
-                object obj = ResourceManager.GetObject("cur254", resourceCulture);
+                object obj = ResourceManager.GetObject("Animated_Gif_Arrows__202_", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

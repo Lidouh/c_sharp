@@ -17,13 +17,11 @@
             {
                 try
                 {
-                    byte[] sndBytesClick = new byte[bytesLength];
+                    sndBytesClick[0] = 3;
                     stream.Write(sndBytesClick, 0, sndBytesClick.Length);
-                    byte[] sndBytesTour = new byte[] { 50 };
-                    stream.Write(sndBytesTour, 0, sndBytesTour.Length);
                     stream.Flush();
                 }
-                catch {  } //car quand fermeture de FormConnect, erreur à stream.Write, objet stream supprimé
+                catch {  } //car si fermeture de FormConnect alors qu'il attend J2, erreur à stream.Write, objet stream supprimé
             }
 
             if (disposing && (components != null))
@@ -45,11 +43,9 @@
             this.joueur2Panel = new System.Windows.Forms.Panel();
             this.J2label = new System.Windows.Forms.Label();
             this.nbMinesJ2TextBox = new System.Windows.Forms.TextBox();
-            this.J2pictureBox = new System.Windows.Forms.PictureBox();
             this.joueur1Panel = new System.Windows.Forms.Panel();
             this.J1label = new System.Windows.Forms.Label();
             this.nbMinesJ1TextBox = new System.Windows.Forms.TextBox();
-            this.J1pictureBox = new System.Windows.Forms.PictureBox();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.partieToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.abandonToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -59,12 +55,14 @@
             this.txt_nbMinesRestantes = new System.Windows.Forms.TextBox();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.J1pictureBox = new System.Windows.Forms.PictureBox();
+            this.J2pictureBox = new System.Windows.Forms.PictureBox();
             this.joueur2Panel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.J2pictureBox)).BeginInit();
             this.joueur1Panel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.J1pictureBox)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.statusStrip.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.J1pictureBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.J2pictureBox)).BeginInit();
             this.SuspendLayout();
             // 
             // grillePanel
@@ -101,24 +99,13 @@
             this.nbMinesJ2TextBox.BackColor = System.Drawing.Color.Red;
             this.nbMinesJ2TextBox.Font = new System.Drawing.Font("Arial Black", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.nbMinesJ2TextBox.ForeColor = System.Drawing.Color.WhiteSmoke;
-            this.nbMinesJ2TextBox.Location = new System.Drawing.Point(55, 53);
+            this.nbMinesJ2TextBox.Location = new System.Drawing.Point(60, 56);
             this.nbMinesJ2TextBox.Name = "nbMinesJ2TextBox";
             this.nbMinesJ2TextBox.ReadOnly = true;
             this.nbMinesJ2TextBox.Size = new System.Drawing.Size(39, 37);
             this.nbMinesJ2TextBox.TabIndex = 4;
             this.nbMinesJ2TextBox.Text = "0";
             this.nbMinesJ2TextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
-            // J2pictureBox
-            // 
-            this.J2pictureBox.Image = global::DemClient.Properties.Resources.cur250;
-            this.J2pictureBox.Location = new System.Drawing.Point(79, 14);
-            this.J2pictureBox.Name = "J2pictureBox";
-            this.J2pictureBox.Size = new System.Drawing.Size(95, 95);
-            this.J2pictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
-            this.J2pictureBox.TabIndex = 6;
-            this.J2pictureBox.TabStop = false;
-            this.J2pictureBox.Visible = false;
             // 
             // joueur1Panel
             // 
@@ -147,24 +134,13 @@
             this.nbMinesJ1TextBox.BackColor = System.Drawing.Color.MediumBlue;
             this.nbMinesJ1TextBox.Font = new System.Drawing.Font("Arial Black", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.nbMinesJ1TextBox.ForeColor = System.Drawing.Color.WhiteSmoke;
-            this.nbMinesJ1TextBox.Location = new System.Drawing.Point(55, 53);
+            this.nbMinesJ1TextBox.Location = new System.Drawing.Point(60, 56);
             this.nbMinesJ1TextBox.Name = "nbMinesJ1TextBox";
             this.nbMinesJ1TextBox.ReadOnly = true;
             this.nbMinesJ1TextBox.Size = new System.Drawing.Size(39, 37);
             this.nbMinesJ1TextBox.TabIndex = 3;
             this.nbMinesJ1TextBox.Text = "0";
             this.nbMinesJ1TextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
-            // J1pictureBox
-            // 
-            this.J1pictureBox.Image = global::DemClient.Properties.Resources.cur254;
-            this.J1pictureBox.Location = new System.Drawing.Point(79, 17);
-            this.J1pictureBox.Name = "J1pictureBox";
-            this.J1pictureBox.Size = new System.Drawing.Size(95, 95);
-            this.J1pictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
-            this.J1pictureBox.TabIndex = 4;
-            this.J1pictureBox.TabStop = false;
-            this.J1pictureBox.Visible = false;
             // 
             // menuStrip1
             // 
@@ -244,6 +220,28 @@
             this.toolStripStatusLabel.Size = new System.Drawing.Size(27, 17);
             this.toolStripStatusLabel.Text = "Etat";
             // 
+            // J1pictureBox
+            // 
+            this.J1pictureBox.Image = global::DemClient.Properties.Resources.Animated_Gif_Arrows__202_;
+            this.J1pictureBox.Location = new System.Drawing.Point(23, 65);
+            this.J1pictureBox.Name = "J1pictureBox";
+            this.J1pictureBox.Size = new System.Drawing.Size(31, 19);
+            this.J1pictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
+            this.J1pictureBox.TabIndex = 4;
+            this.J1pictureBox.TabStop = false;
+            this.J1pictureBox.Visible = false;
+            // 
+            // J2pictureBox
+            // 
+            this.J2pictureBox.Image = global::DemClient.Properties.Resources.Animated_Gif_Arrows__202_;
+            this.J2pictureBox.Location = new System.Drawing.Point(23, 65);
+            this.J2pictureBox.Name = "J2pictureBox";
+            this.J2pictureBox.Size = new System.Drawing.Size(31, 19);
+            this.J2pictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
+            this.J2pictureBox.TabIndex = 6;
+            this.J2pictureBox.TabStop = false;
+            this.J2pictureBox.Visible = false;
+            // 
             // FormJeu
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -261,14 +259,14 @@
             this.Text = "Mon Démineur";
             this.joueur2Panel.ResumeLayout(false);
             this.joueur2Panel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.J2pictureBox)).EndInit();
             this.joueur1Panel.ResumeLayout(false);
             this.joueur1Panel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.J1pictureBox)).EndInit();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.statusStrip.ResumeLayout(false);
             this.statusStrip.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.J1pictureBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.J2pictureBox)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
